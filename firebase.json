@@ -1,0 +1,51 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "musicapp-19bff",
+          "appId": "1:384709551060:android:63123c5f4379cd784dac41",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "musicapp-19bff",
+          "configurations": {
+            "android": "1:384709551060:android:63123c5f4379cd784dac41",
+            "ios": "1:384709551060:ios:3391e13693577d634dac41",
+            "macos": "1:384709551060:ios:3391e13693577d634dac41",
+            "web": "1:384709551060:web:7711ddbeeb470df44dac41",
+            "windows": "1:384709551060:web:d40856e126b592e04dac41"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "eur3",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ],
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
