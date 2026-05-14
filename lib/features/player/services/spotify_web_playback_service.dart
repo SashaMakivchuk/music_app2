@@ -40,7 +40,7 @@ class SpotifyWebPlaybackService {
   SpotifyPlayer? _player;
   String? _deviceId;
   String? _token;
-.
+
   Future<void> init(
     String token,
     Function(Map<String, dynamic>) onStateChange,
