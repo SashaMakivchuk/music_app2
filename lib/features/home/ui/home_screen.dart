@@ -81,8 +81,7 @@ class _TrackTile extends ConsumerWidget {
       title: Text(track.title),
       subtitle: Text(track.artist),
       onTap: () {
-        final cid = ref.read(soundCloudRepoProvider).clientId;
-        final uri = track.playbackUri(cid);
+        final uri = track.playbackUri('');
         ref.read(audioHandlerProvider).playFromUri(
               uri,
               {'mediaItem': mediaItemForTrack(track)},

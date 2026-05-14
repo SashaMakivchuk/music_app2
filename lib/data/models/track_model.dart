@@ -19,32 +19,36 @@ class Track {
 
   bool get isLocal => localPath != null && localPath!.isNotEmpty;
 
-  Uri playbackUri(String soundCloudClientId) {
+  Uri playbackUri(String unusedId) {
     if (isLocal) {
       return Uri.file(localPath!);
     }
-    var url = streamUrl;
-    if (url.isEmpty) return Uri();
-    if (soundCloudClientId.isNotEmpty && !url.contains('client_id=')) {
-      final sep = url.contains('?') ? '&' : '?';
-      url = '$url${sep}client_id=$soundCloudClientId';
-    }
-    return Uri.parse(url);
+    // We store the Spotify URI (e.g. spotify:track:...) in streamUrl
+    if (streamUrl.isEmpty) return Uri();
+    return Uri.parse(streamUrl);
   }
 
   factory Track.fromMap(Map<String, dynamic> map) {
-    final user = map['user'];
+    final artists = map['artists'] as List<dynamic>?;
     String artist = 'Unknown Artist';
-    if (user is Map<String, dynamic>) {
-      artist = user['username'] as String? ?? artist;
+    if (artists != null && artists.isNotEmpty) {
+      artist = artists[0]['name'] as String? ?? artist;
     }
+    
+    final album = map['album'] as Map<String, dynamic>?;
+    final images = album?['images'] as List<dynamic>?;
+    String thumb = '';
+    if (images != null && images.isNotEmpty) {
+      thumb = images[0]['url'] as String? ?? '';
+    }
+
     return Track(
       id: map['id'].toString(),
-      title: map['title'] as String? ?? 'Unknown Title',
+      title: map['name'] as String? ?? 'Unknown Title',
       artist: artist,
-      thumbnailUrl: (map['artwork_url'] as String?) ?? '',
-      streamUrl: (map['stream_url'] as String?) ?? '',
-      duration: Duration(milliseconds: (map['duration'] as num?)?.toInt() ?? 0),
+      thumbnailUrl: thumb,
+      streamUrl: map['uri'] as String? ?? '', // Store Spotify URI here
+      duration: Duration(milliseconds: (map['duration_ms'] as num?)?.toInt() ?? 0),
     );
   }
 

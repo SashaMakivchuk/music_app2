@@ -38,15 +38,38 @@ exports.musicAgent = onCall(
           messages: [
             {
               role: "system",
-              content: "You are a music discovery agent. Convert the user's " +
-                "mood or request into 3-5 short SoundCloud search keywords. " +
-                "Return ONLY the keywords separated by commas.",
+              content:
+                "You are Aria, a warm and music-obsessed AI DJ " +
+                "living inside a music app. " +
+                "You love talking about music, moods, genres, " +
+                "artists, and vibes. " +
+                "When the user asks for music, respond naturally and " +
+                "conversationally (1-3 sentences max), like a friend " +
+                "who really knows their music. " +
+                "You can comment on the mood, suggest a genre, " +
+                "mention an artist, or just vibe with them. " +
+                "Then provide Spotify search keywords. " +
+                "Always respond in JSON with exactly this shape: " +
+                "{\"reply\": \"your conversational message\", " +
+                "\"keywords\": [\"keyword1\", \"keyword2\", \"kw3\"]}. " +
+                "Keywords should be 3-5 short Spotify search terms.",
             },
             {role: "user", content: prompt},
           ],
+          response_format: {type: "json_object"},
         });
-        const keywords = response.choices[0].message.content || "";
-        return {keywords};
+        const raw = response.choices[0].message.content || "{}";
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (e) {
+          parsed = {};
+        }
+        const reply = parsed.reply || "Let me find some tracks for you!";
+        const keywords = Array.isArray(parsed.keywords) ?
+          parsed.keywords.map((k) => String(k).trim()).filter(Boolean) :
+          [];
+        return {reply, keywords};
       } catch (error) {
         logger.error("OpenAI musicAgent error", error);
         throw new HttpsError("internal", "AI request failed");

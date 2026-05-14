@@ -73,9 +73,8 @@ class FavouritesScreen extends ConsumerWidget {
                         subtitle: Text(m['artist'] as String? ?? ''),
                         onTap: () {
                           final t = _trackFromLike(m);
-                          final cid = ref.read(soundCloudRepoProvider).clientId;
                           ref.read(audioHandlerProvider).playFromUri(
-                                t.playbackUri(cid),
+                                t.playbackUri(''),
                                 {'mediaItem': mediaItemForTrack(t)},
                               );
                         },

@@ -69,8 +69,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   void _play(Track track) {
-    final cid = ref.read(soundCloudRepoProvider).clientId;
-    final uri = track.playbackUri(cid);
+    final uri = track.playbackUri('');
     ref.read(audioHandlerProvider).playFromUri(
           uri,
           {'mediaItem': mediaItemForTrack(track)},
@@ -104,7 +103,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         title: TextField(
           controller: _controller,
           decoration: const InputDecoration(
-            hintText: 'SoundCloud + your downloads…',
+            hintText: 'Spotify + your downloads…',
             border: InputBorder.none,
           ),
           onSubmitted: (v) => setState(() => _query = v.trim()),
@@ -160,12 +159,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 const Divider(),
               ],
               const ListTile(
-                title: Text('SoundCloud',
+                title: Text('Spotify',
                     style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               if (tracks.isEmpty && _query.isNotEmpty)
                 const ListTile(
-                  title: Text('No results (check SOUNDCLOUD_CLIENT_ID in .env)'),
+                  title: Text('No results'),
                 ),
               ...tracks.map(
                 (track) => ListTile(

@@ -6,17 +6,17 @@ class CloudFunctionsRepository {
 
   final FirebaseFunctions _fn;
 
-  Future<String> musicAgentKeywords(String prompt) async {
-
-    print('DEBUG functions app: ${_fn.app.name}');
-    print('DEBUG callable: ${_fn.httpsCallable('musicAgent')}');
-
+  Future<({String reply, List<String> keywords})> musicAgentKeywords(
+      String prompt) async {
     final callable = _fn.httpsCallable('musicAgent');
     final res = await callable.call<Map<String, dynamic>>({'prompt': prompt});
     final data = res.data;
-    final keywords = data['keywords'];
-    if (keywords is String) return keywords;
-    return '';
+    final reply = data['reply'] is String ? data['reply'] as String : '';
+    final kwRaw = data['keywords'];
+    final keywords = kwRaw is List
+        ? kwRaw.map((e) => e.toString()).where((s) => s.isNotEmpty).toList()
+        : <String>[];
+    return (reply: reply, keywords: keywords);
   }
 
   Future<List<String>> getRecommendationQueries() async {

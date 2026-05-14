@@ -30,6 +30,19 @@
   </style>
 </head>
 <body>
+  <script>
+    // Define the callback stub BEFORE the Spotify SDK loads.
+    // The SDK calls this immediately when it's ready.
+    // We store the resolve function so Dart can trigger player init later.
+    window._spotifySDKReady = false;
+    window._spotifySDKReadyCallbacks = [];
+    window.onSpotifyWebPlaybackSDKReady = function() {
+      window._spotifySDKReady = true;
+      window._spotifySDKReadyCallbacks.forEach(function(cb) { cb(); });
+      window._spotifySDKReadyCallbacks = [];
+    };
+  </script>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

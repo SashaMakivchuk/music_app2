@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../../core/providers/audio_provider.dart';
 import '../../../core/providers/bootstrap_providers.dart';
@@ -35,27 +34,23 @@ class _AiAgentScreenState extends ConsumerState<AiAgentScreen> {
 
     try {
       final fn = ref.read(cloudFunctionsRepositoryProvider);
-      final keywords = await fn.musicAgentKeywords(prompt);
+      final result = await fn.musicAgentKeywords(prompt);
+
+      // Show the AI's conversational reply in the chat
       setState(() {
-        _messages.add(
-          AiMessage(
-            text: 'Try searching for: $keywords',
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
+        _messages.add(AiMessage(
+          text: result.reply,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
       });
-      final parts = keywords
-          .split(RegExp(r'[,;\n]'))
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .take(4)
-          .toList();
-      if (parts.isEmpty) return;
-      final sound = ref.read(soundCloudRepoProvider);
+
+      if (result.keywords.isEmpty) return;
+
+      final sound = ref.read(spotifyRepoProvider);
       final merged = <Track>[];
       final seen = <String>{};
-      for (final p in parts) {
+      for (final p in result.keywords) {
         final list = await sound.searchTracks(p);
         for (final t in list) {
           if (seen.add(t.id)) merged.add(t);
@@ -64,57 +59,23 @@ class _AiAgentScreenState extends ConsumerState<AiAgentScreen> {
       if (!mounted) return;
       if (merged.isEmpty) {
         setState(() {
-          _messages.add(
-            AiMessage(
-              text: 'No SoundCloud tracks found for those keywords.',
-              isUser: false,
-              timestamp: DateTime.now(),
-            ),
-          );
+          _messages.add(AiMessage(
+            text: "Hmm, couldn't find tracks for those on Spotify. Try rephrasing?",
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
         });
         return;
       }
-      setState(() {
-        _messages.add(
-          AiMessage(
-            text: 'Here are picks based on your mood:',
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
-      });
       if (!mounted) return;
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: const Color(0xFF121212),
-        builder: (ctx) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.55,
-          minChildSize: 0.35,
-          maxChildSize: 0.92,
-          builder: (_, scroll) => ListView.builder(
-            controller: scroll,
-            itemCount: merged.length.clamp(0, 15),
-            itemBuilder: (_, i) {
-              final t = merged[i];
-              return ListTile(
-                title: Text(t.title),
-                subtitle: Text(t.artist),
-                onTap: () {
-                  final cid = dotenv.get('SOUNDCLOUD_CLIENT_ID', fallback: '');
-                  ref.read(audioHandlerProvider).playFromUri(
-                        t.playbackUri(cid),
-                        {'mediaItem': mediaItemForTrack(t)},
-                      );
-                  Navigator.pop(ctx);
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-      );
+      setState(() {
+        _messages.add(AiMessage(
+          text: 'Here are some picks 🎵',
+          isUser: false,
+          timestamp: DateTime.now(),
+          tracks: merged.take(12).toList(),
+        ));
+      });
     } catch (e) {
       setState(() {
         _messages.add(

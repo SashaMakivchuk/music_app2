@@ -6,7 +6,7 @@ import '../../../data/models/track_model.dart';
 import '../../search/logic/search_provider.dart';
 
 final homeFeedTracksProvider = FutureProvider<List<Track>>((ref) async {
-  final sound = ref.watch(soundCloudRepoProvider);
+  final sound = ref.watch(spotifyRepoProvider);
   final user = ref.watch(authStateProvider).asUser;
   if (user != null) {
     try {

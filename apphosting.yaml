@@ -6,7 +6,15 @@ runConfig:
   # concurrency: 80
   # cpu: 1
   # memoryMiB: 512
+kind: "AppStack"
+schemaVersion: "v1beta"
 
+# If your flutter app is in the root, usually you don't need a root directory change.
+# But you must specify the build command for Flutter Web.
+runConfig:
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
 # Environment variables and secrets.
 # env:
   # Configure environment variables.
