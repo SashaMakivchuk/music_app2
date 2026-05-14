@@ -2,11 +2,15 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 class CloudFunctionsRepository {
   CloudFunctionsRepository([FirebaseFunctions? functions])
-      : _fn = functions ?? FirebaseFunctions.instance;
+      : _fn = functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   final FirebaseFunctions _fn;
 
   Future<String> musicAgentKeywords(String prompt) async {
+
+    print('DEBUG functions app: ${_fn.app.name}');
+    print('DEBUG callable: ${_fn.httpsCallable('musicAgent')}');
+
     final callable = _fn.httpsCallable('musicAgent');
     final res = await callable.call<Map<String, dynamic>>({'prompt': prompt});
     final data = res.data;

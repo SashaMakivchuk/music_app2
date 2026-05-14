@@ -1,6 +1,6 @@
 /**
- * Cloud Functions: OpenAI proxy + recommendation queries.
- * Set secret: firebase functions:secrets:set OPENAI_API_KEY
+
+ * Set env:    add SOUNDCLOUD_CLIENT_ID to functions/.env
  */
 
 const {initializeApp} = require("firebase-admin/app");
@@ -10,6 +10,7 @@ const {defineSecret} = require("firebase-functions/params");
 const {setGlobalOptions} = require("firebase-functions");
 const logger = require("firebase-functions/logger");
 const {OpenAI} = require("openai");
+const axios = require("axios");
 
 initializeApp();
 const db = getFirestore();
@@ -18,8 +19,10 @@ const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
 setGlobalOptions({maxInstances: 10, region: "europe-west1"});
 
+const CORS_ORIGIN = "https://musicapp-19bff.web.app";
+
 exports.musicAgent = onCall(
-    {secrets: [openaiApiKey]},
+    {secrets: [openaiApiKey], cors: [CORS_ORIGIN]},
     async (request) => {
       if (!request.auth) {
         throw new HttpsError("unauthenticated", "Sign in required");
@@ -52,7 +55,7 @@ exports.musicAgent = onCall(
 );
 
 exports.getRecommendations = onCall(
-    {secrets: [openaiApiKey]},
+    {secrets: [openaiApiKey], cors: [CORS_ORIGIN]},
     async (request) => {
       if (!request.auth) {
         throw new HttpsError("unauthenticated", "Sign in required");
@@ -121,6 +124,57 @@ exports.getRecommendations = onCall(
             "r&b slow jams",
           ],
         };
+      }
+    },
+);
+
+exports.soundcloudSearch = onCall(
+    {cors: [CORS_ORIGIN]},
+    async (request) => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Sign in required");
+      }
+      const clientId = process.env.SOUNDCLOUD_CLIENT_ID;
+      if (!clientId) {
+        throw new HttpsError(
+            "internal",
+            "SoundCloud client ID not configured. " +
+            "Add SOUNDCLOUD_CLIENT_ID to functions/.env",
+        );
+      }
+      const data = request.data || {};
+      const query = data.query || null;
+      const limit = data.limit || 12;
+      const params = {
+        client_id: clientId,
+        limit,
+      };
+      if (query) {
+        params.q = query;
+      } else {
+        params.linked_partitioning = "true";
+      }
+      try {
+        const res = await axios.get(
+            "https://api.soundcloud.com/tracks",
+            {params},
+        );
+        const body = res.data;
+        let tracks = [];
+        if (Array.isArray(body)) {
+          tracks = body;
+        } else if (body && Array.isArray(body.collection)) {
+          tracks = body.collection;
+        }
+        return {tracks};
+      } catch (error) {
+        const detail = error &&
+          error.response &&
+          error.response.data ?
+          error.response.data :
+          error;
+        logger.error("SoundCloud proxy error", detail);
+        throw new HttpsError("internal", "SoundCloud request failed");
       }
     },
 );
